@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:text_scanner/item.dart';
+import 'package:text_scanner/models.dart';
+import 'package:text_scanner/utils.dart';
 
 enum Selection { none, multiple, all }
 
@@ -42,32 +45,32 @@ class _ItemWidgetState extends State<ItemWidget> {
           leading: Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: MemoryImage(widget.item.image),
+                image: FileImage(File(widget.item.image)),
                 fit: BoxFit.cover,
               ),
             ),
-            width: 50,
+            width: 60,
           ),
           title: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.item.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+                  Expanded(
+                    child: Text(
+                      widget.item.title,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 15),
+              const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
-                    widget.item.date.toString(),
+                    formatDate(widget.item.date),
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
@@ -82,12 +85,12 @@ class _ItemWidgetState extends State<ItemWidget> {
               : _selected == true
                   ? Stack(
                       alignment: AlignmentDirectional.center,
-                      children: [
+                      children: const [
                         Icon(Icons.circle_outlined, size: 18.0),
                         Icon(Icons.circle_rounded, size: 12.0),
                       ],
                     )
-                  : Icon(Icons.circle_outlined, size: 18.0),
+                  : const Icon(Icons.circle_outlined, size: 18.0),
           onTap: () {
             setState(() {
               if (_selected != null) {
@@ -104,7 +107,7 @@ class _ItemWidgetState extends State<ItemWidget> {
             }
           },
         ),
-        Divider(),
+        const Divider(),
       ],
     );
   }

@@ -1,9 +1,6 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:text_scanner/item.dart';
+import 'package:text_scanner/models.dart';
 
 final itemsdb = ItemsDatabase(path: ItemsDatabase.FILE_NAME);
 
@@ -12,7 +9,7 @@ class ItemsDatabase extends ChangeNotifier {
   static const TABLE_NAME = 'items';
   static const VERSION = 1;
 
-  final _database;
+  final Future<Database> _database;
 
   ItemsDatabase({
     required String path,
@@ -24,11 +21,11 @@ class ItemsDatabase extends ChangeNotifier {
   ) async {
     await db.execute('''
       CREATE TABLE $TABLE_NAME (
-        id TEXT PRIMARY KEY,
-        title TEXT,
-        date TEXT,
-        image BLOB,
-        text TEXT
+        id    TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        date  TEXT NOT NULL,
+        image TEXT NOT NULL,
+        text  TEXT NOT NULL
       )
     ''');
   }
@@ -61,25 +58,33 @@ class ItemsDatabase extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Future<List<Item>> get({
-  //   String? id,
-  //   String? title,
-  //   String? date,
-  // }) async {
-  //   final Database db = await _database;
-  //   final args = <String, dynamic>{};
-  //   if (id != null) args['id'] = id;
-  //   if (title != null) args['title'] = title;
-  //   if (date != null) args['date'] = date;
+  Future<List<Item>> get({String? id}) async {
+    final Database db = await _database;
 
-  //   final List<Map<String, dynamic>> maps = await db.query(
-  //     TABLE_NAME,
-  //     where: args.keys.map((key) => '$key = ?').join(' LIKE '),
-  //     whereArgs: args.values.toList(),
-  //     orderBy: 'date DESC',
-  //   );
-  //   return List.generate(maps.length, (i) {
-  //     return Note.fromJson(maps[i]);
-  //   });
-  // }
+    final List<Map<String, dynamic>> maps = await db.query(
+      TABLE_NAME,
+      where: id == null ? null : "id == '$id'",
+      orderBy: 'date DESC',
+    );
+    return List.generate(maps.length, (i) {
+      return Item.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Item>> search(String query) async {
+    if (query == "") return get();
+
+    final Database db = await _database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      TABLE_NAME,
+      where: "title LIKE '%$query%'",
+      orderBy: 'date DESC',
+    );
+    return List.generate(
+      maps.length,
+      (i) {
+        return Item.fromMap(maps[i]);
+      },
+    );
+  }
 }
