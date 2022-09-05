@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/text_scanner_view.dart';
 
 class FloatingButton extends StatefulWidget {
@@ -13,9 +13,8 @@ class FloatingButton extends StatefulWidget {
 
 class _FloatingButtonState extends State<FloatingButton> {
   bool _expandedFloatingBtn = false;
-  final _picker = ImagePicker();
 
-  _scanImage(String path) async {
+  Future<void> _scanImage(String path) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -37,11 +36,10 @@ class _FloatingButtonState extends State<FloatingButton> {
                 child: FloatingActionButton(
                   heroTag: "from camera",
                   onPressed: () async {
-                    final img = await _picker.pickImage(
-                      source: ImageSource.camera,
-                    );
+                    final img = await Channel.captureImage();
+                    print(img);
                     if (img != null) {
-                      _scanImage(img.path);
+                      await _scanImage(img);
                     }
                   },
                   child: const Icon(Icons.camera_alt),
@@ -51,11 +49,9 @@ class _FloatingButtonState extends State<FloatingButton> {
                 child: FloatingActionButton(
                   heroTag: "from gallery",
                   onPressed: () async {
-                    final img = await _picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
+                    final img = await Channel.pickImage();
                     if (img != null) {
-                      _scanImage(img.path);
+                      await _scanImage(img);
                     }
                   },
                   child: const Icon(Icons.collections),

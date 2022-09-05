@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:text_scanner/database.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
-import 'package:text_scanner/views/item_view.dart';
-import 'package:text_scanner/views/widgets/item_widget.dart';
 import 'package:text_scanner/views/widgets/lang_widget.dart';
 
 class SearchLangView extends StatefulWidget {
@@ -15,13 +12,6 @@ class SearchLangView extends StatefulWidget {
 
 class _SearchLangViewState extends State<SearchLangView> {
   final _controller = TextEditingController();
-
-  _onTap(Item item, bool? selected) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ItemView(item: item)),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

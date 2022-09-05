@@ -45,6 +45,18 @@ Future<void> saveUserData(Map<String, dynamic> data) async {
 class Channel {
   static const ANDROID_CHANNEL = MethodChannel('com.oezeb.notepad/ocr_offline');
 
+  // static Future<void> test() async {
+  //   await ANDROID_CHANNEL.invokeMethod("test");
+  // }
+
+  static Future<String?> pickImage() async {
+    return await ANDROID_CHANNEL.invokeMethod("pickImage");
+  }
+
+  static Future<String?> captureImage() async {
+    return await ANDROID_CHANNEL.invokeMethod("captureImage");
+  }
+
   static Future<String> imageToString(String path, String lang) async {
     return await ANDROID_CHANNEL.invokeMethod('imageToString', {
       "path": path,

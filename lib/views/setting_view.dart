@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/lang_manager_view.dart';
 

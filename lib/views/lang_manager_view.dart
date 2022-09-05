@@ -22,7 +22,7 @@ class _LangManagerViewState extends State<LangManagerView> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SearchLangView()),
+                MaterialPageRoute(builder: (context) => const SearchLangView()),
               );
             },
             icon: const Icon(Icons.search),
