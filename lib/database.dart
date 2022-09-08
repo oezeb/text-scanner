@@ -2,8 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:text_scanner/models.dart';
 
-final itemsdb = ItemsDatabase(path: ItemsDatabase.FILE_NAME);
-
 class ItemsDatabase extends ChangeNotifier {
   static const FILE_NAME = 'items.db';
   static const TABLE_NAME = 'items';

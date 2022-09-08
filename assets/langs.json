@@ -72,6 +72,10 @@
         "name": "Cherokee"
     },
     {
+        "code": "cos",
+        "name": "Corsican"
+    },
+    {
         "code": "cym",
         "name": "Welsh"
     },
@@ -104,6 +108,10 @@
         "name": "Esperanto"
     },
     {
+        "code": "equ",
+        "name": "Math / equation detection module"
+    },
+    {
         "code": "est",
         "name": "Estonian"
     },
@@ -112,8 +120,16 @@
         "name": "Basque"
     },
     {
+        "code": "fao",
+        "name": "Faroese"
+    },
+    {
         "code": "fas",
         "name": "Persian"
+    },
+    {
+        "code": "fil",
+        "name": "Filipino (old - Tagalog)"
     },
     {
         "code": "fin",
@@ -130,6 +146,14 @@
     {
         "code": "frm",
         "name": "French, Middle (ca.1400-1600)"
+    },
+    {
+        "code": "fry",
+        "name": "Western Frisian"
+    },
+    {
+        "code": "gla",
+        "name": "Scottish Gaelic"
     },
     {
         "code": "gle",
@@ -166,6 +190,10 @@
     {
         "code": "hun",
         "name": "Hungarian"
+    },
+    {
+        "code": "hye",
+        "name": "Armenian"
     },
     {
         "code": "iku",
@@ -406,10 +434,6 @@
     {
         "code": "tgk",
         "name": "Tajik"
-    },
-    {
-        "code": "tgl",
-        "name": "Tagalog (new - Filipino)"
     },
     {
         "code": "tha",

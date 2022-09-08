@@ -44,12 +44,15 @@ class _LangManagerViewState extends State<LangManagerView> {
                   return ListView.builder(
                     itemCount: langs.length,
                     itemBuilder: (context, index) => LangWidget(
-                      name: langs[index].name,
-                      code: langs[index].code,
+                      lang: langs[index],
                     ),
                   );
                 } else {
-                  return const LinearProgressIndicator();
+                  return Column(
+                    children: [
+                      const LinearProgressIndicator(),
+                    ],
+                  );
                 }
               },
             ),

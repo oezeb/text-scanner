@@ -1,10 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.text_scanner">
+    package="com.oezeb.text_scanner">
     
     <uses-permission android:name="android.permission.INTERNET" />
 
    <application
-        android:label="text_scanner"
+        android:label="Text Scanner"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

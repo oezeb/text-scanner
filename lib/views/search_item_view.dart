@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:text_scanner/database.dart';
 import 'package:text_scanner/models.dart';
+import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/item_view.dart';
 import 'package:text_scanner/views/widgets/item_widget.dart';
 
@@ -74,7 +74,11 @@ class _SearchItemViewState extends State<SearchItemView> {
                   ),
                 );
               } else {
-                return const LinearProgressIndicator();
+                return Column(
+                  children: const [
+                    LinearProgressIndicator(),
+                  ],
+                );
               }
             },
           ),

@@ -1,4 +1,4 @@
-package com.example.text_scanner;
+package com.oezeb.text_scanner;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 

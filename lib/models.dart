@@ -40,4 +40,10 @@ class Lang {
       : name = map["name"],
         code = map["code"],
         hasLocalData = map["hasLocalData"];
+
+  Map<String, dynamic> toMap() => {
+        "name": name,
+        "code": code,
+        "hasLocalData": hasLocalData,
+      };
 }

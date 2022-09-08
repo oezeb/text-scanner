@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:text_scanner/database.dart';
 import 'package:text_scanner/models.dart';
+import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/widgets/item_widget.dart';
 
 class MultiSelectWidget extends StatefulWidget {

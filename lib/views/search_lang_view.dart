@@ -12,6 +12,16 @@ class SearchLangView extends StatefulWidget {
 
 class _SearchLangViewState extends State<SearchLangView> {
   final _controller = TextEditingController();
+  late List<Lang> _langs;
+
+  @override
+  void initState() {
+    _langs = LangManager.search(
+      _controller.text,
+      scanLanguages.values.toList(),
+    );
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +32,12 @@ class _SearchLangViewState extends State<SearchLangView> {
           autofocus: true,
           controller: _controller,
           onChanged: (value) {
-            setState(() {});
+            setState(() {
+              _langs = LangManager.search(
+                _controller.text,
+                scanLanguages.values.toList(),
+              );
+            });
           },
           decoration: InputDecoration(
             hintText: "Search",
@@ -40,6 +55,10 @@ class _SearchLangViewState extends State<SearchLangView> {
               onPressed: () {
                 setState(() {
                   _controller.text = "";
+                  _langs = LangManager.search(
+                    _controller.text,
+                    scanLanguages.values.toList(),
+                  );
                 });
               },
               icon: const Icon(Icons.close),
@@ -54,22 +73,12 @@ class _SearchLangViewState extends State<SearchLangView> {
         children: [
           const Divider(),
           Expanded(
-            child: FutureBuilder(
-              future: LangManager.search(_controller.text),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  var langs = snapshot.data as List<Lang>;
-                  return ListView.builder(
-                    itemCount: langs.length,
-                    itemBuilder: (context, index) => LangWidget(
-                      name: langs[index].name,
-                      code: langs[index].code,
-                    ),
-                  );
-                } else {
-                  return const LinearProgressIndicator();
-                }
-              },
+            child: ListView.builder(
+              itemCount: _langs.length,
+              itemBuilder: (context, index) => LangWidget(
+                key: Key(_langs[index].code),
+                lang: _langs[index],
+              ),
             ),
           ),
         ],

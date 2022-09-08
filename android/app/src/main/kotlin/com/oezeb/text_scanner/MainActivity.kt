@@ -1,4 +1,4 @@
-package com.example.text_scanner
+package com.oezeb.text_scanner
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -18,7 +18,7 @@ import kotlin.concurrent.thread
 
 
 class MainActivity: FlutterActivity() {
-    private val CHANNEL = "com.oezeb.notepad/ocr_offline"
+    private val CHANNEL = "com.oezeb.text_scanner/channel"
 
     private var pickedImage: String? = null
     private var capturedImage: String? = null
@@ -41,6 +41,7 @@ class MainActivity: FlutterActivity() {
                 "captureImage" -> captureImage(call, result)
                 "imageToString" -> imageToString(call, result, tess)
                 "getExternalStorageDirectory" -> getExternalStorageDirectory(call, result)
+                "getExternalCacheDirectory" -> getExternalCacheDirectory(call, result)
                 "openUrl" -> openUrl(call, result)
                 "shareText" -> shareText(call, result)
                 else -> result.notImplemented()
@@ -48,8 +49,27 @@ class MainActivity: FlutterActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (capturedImage == "*") {
+            capturedImage = null
+        }
+        if (pickedImage == "*") {
+            pickedImage = null
+        }
+    }
+
+    override fun onActivityReenter(resultCode: Int, data: Intent?) {
+        super.onActivityReenter(resultCode, data)
+        when (resultCode) {
+            RequestCode.CAPTURE_IMAGE -> capturedImage = null
+            RequestCode.PICK_IMAGE -> pickedImage = null
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, imageReturnedIntent: Intent?) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent)
+//        Log.v("[Request Code]: ", "$requestCode")
         when (requestCode) {
             RequestCode.CAPTURE_IMAGE -> if (resultCode == RESULT_OK) {
                 val bp = imageReturnedIntent?.extras?.get("data") as Bitmap
@@ -66,7 +86,6 @@ class MainActivity: FlutterActivity() {
                 }
             }
             RequestCode.PICK_IMAGE -> if (resultCode == RESULT_OK) {
-                Log.v("MainActivity", "intent: ${imageReturnedIntent.toString()}")
                 val uri = imageReturnedIntent?.data
                 val bp = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
                 val file = File.createTempFile("pick_", ".jpg")
@@ -110,12 +129,11 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun getExternalStorageDirectory(call: MethodCall, result: MethodChannel.Result) {
-        val dir = getExternalFilesDir(null)
-        if (dir != null) {
-            result.success(dir.absolutePath)
-        } else {
-            result.error("getExternalFilesDir error", "getExternalFilesDir error", null)
-        }
+        result.success(getExternalFilesDir(null)?.absolutePath)
+    }
+
+    private fun getExternalCacheDirectory(call: MethodCall, result: MethodChannel.Result) {
+        result.success(externalCacheDir?.absolutePath)
     }
 
     private fun imageToString(call: MethodCall, result: MethodChannel.Result, tess: Tesseract) {

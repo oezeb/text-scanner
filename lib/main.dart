@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:text_scanner/views/home_view.dart';
+import 'package:text_scanner/views/splash_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomeView(title: 'Recents'),
+      home: const SplashView(),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:text_scanner/database.dart';
 import 'package:text_scanner/models.dart';
+import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/item_view.dart';
 import 'package:text_scanner/views/search_item_view.dart';
 import 'package:text_scanner/views/setting_view.dart';
@@ -21,10 +21,11 @@ class _HomeViewState extends State<HomeView> {
   String _selected = "";
 
   _onTap(Item item, bool? selected) async {
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ItemView(item: item)),
     );
+    setState(() {});
   }
 
   _onLongPress(Item item, bool? selected) {
@@ -157,7 +158,11 @@ class _HomeViewState extends State<HomeView> {
                               ),
                             );
                           } else {
-                            return const LinearProgressIndicator();
+                            return Column(
+                              children: const [
+                                LinearProgressIndicator(),
+                              ],
+                            );
                           }
                         },
                       ),

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
 
 class LangWidget extends StatefulWidget {
-  final String name;
-  final String code;
+  final Lang lang;
   const LangWidget({
     super.key,
-    required this.name,
-    required this.code,
+    required this.lang,
   });
 
   @override
@@ -15,29 +14,31 @@ class LangWidget extends StatefulWidget {
 }
 
 class _LangWidgetState extends State<LangWidget> {
-  final _langManager = LangManager();
-  var _downloading = false;
+  late Lang _lang;
+  late LangManager _langManager;
 
   @override
   void initState() {
     super.initState();
+    _lang = widget.lang;
+    if (scanLangDownloaders.containsKey(_lang.code) == false) {
+      scanLangDownloaders[_lang.code] = LangManager();
+    }
+
+    _langManager = scanLangDownloaders[_lang.code]!;
     _langManager.addListener(() async {
       if (mounted) {
-        if (_langManager.done || _langManager.error) {
-          if (_langManager.error) {
+        if (_langManager.status.done || _langManager.status.error) {
+          if (_langManager.status.error) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 backgroundColor: Colors.red,
-                content: Text(_langManager.errorMessage),
+                content: Text(_langManager.status.errorMessage),
               ),
             );
           }
-          setState(() {
-            _downloading = false;
-          });
-        } else {
-          setState(() {});
         }
+        setState(() {});
       }
     });
   }
@@ -45,25 +46,39 @@ class _LangWidgetState extends State<LangWidget> {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(widget.name),
-      trailing: _downloading
-          ? SizedBox(
-              height: 48,
-              width: 48,
-              child: Center(
-                child: SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    value: _langManager.total == null
-                        ? null
-                        : _langManager.downloaded / _langManager.total!,
+      title: Text(_lang.name),
+      trailing: _langManager.downloading
+          ? Stack(
+              children: [
+                SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: CircularProgressIndicator(
+                          value: _langManager.status.total == null
+                              ? null
+                              : _langManager.status.downloaded! /
+                                  _langManager.status.total!,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+                IconButton(
+                  onPressed: () {
+                    _langManager.cancelDownload();
+                  },
+                  icon: const Icon(Icons.close),
+                ),
+              ],
             )
           : FutureBuilder(
-              future: LangManager.existLocalData(widget.code),
+              future: LangManager.existLocalData(_lang.code),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   bool exist = snapshot.data as bool;
@@ -75,7 +90,7 @@ class _LangWidgetState extends State<LangWidget> {
                           builder: (context) => AlertDialog(
                             title: const Text("Confirm delete"),
                             content: Text(
-                              "Are you sure you want to delete ${widget.name} data?",
+                              "Are you sure you want to delete ${_lang.name} data?",
                             ),
                             actions: [
                               TextButton(
@@ -86,7 +101,7 @@ class _LangWidgetState extends State<LangWidget> {
                               ),
                               TextButton(
                                 onPressed: () async {
-                                  await LangManager.delete(widget.code);
+                                  await LangManager.delete(_lang.code);
                                   setState(() {});
                                   if (!mounted) return;
                                   Navigator.pop(context);
@@ -101,17 +116,14 @@ class _LangWidgetState extends State<LangWidget> {
                     );
                   } else {
                     return IconButton(
-                      onPressed: () {
-                        _langManager.downloadDataWithProgress(widget.code);
-                        setState(() {
-                          _downloading = true;
-                        });
+                      onPressed: () async {
+                        await _langManager.downloadDataWithProgress(_lang.code);
                       },
                       icon: const Icon(Icons.download_outlined),
                     );
                   }
                 } else {
-                  return const CircularProgressIndicator();
+                  return CircularProgressIndicator();
                 }
               },
             ),

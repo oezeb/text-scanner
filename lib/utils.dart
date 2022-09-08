@@ -1,12 +1,26 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
+import 'package:text_scanner/database.dart';
 import 'package:text_scanner/models.dart';
 
-Map<String, dynamic>? userData;
+final itemsdb = ItemsDatabase(path: ItemsDatabase.FILE_NAME);
+final scanLangDownloaders = <String, LangManager>{};
+late Map<String, Lang> scanLanguages;
+late UserData userData;
+
+Future<void> init() async {
+  scanLanguages = {};
+  for (var e in await LangManager.languages) {
+    scanLanguages[e.code] = e;
+  }
+  userData = UserData();
+  await userData.init();
+}
 
 String formatDate(DateTime date) {
   final year = date.year;
@@ -19,42 +33,74 @@ String formatDate(DateTime date) {
   return "$year-$month-$day $hour:$minute:$second ${date.hour < 12 ? 'AM' : 'PM'}";
 }
 
-Future<Map<String, dynamic>> getuserData() async {
-  var path = await Channel.getExternalStorageDirectory();
-  var file = File("$path/userdata");
-  if (await file.exists() == false) {
-    file = await file.create(recursive: true);
-    file.writeAsString("{}");
+class UserData {
+  static const String SCAN_LANG = "scan_lang";
+
+  late final File _file;
+  late final Map<String, dynamic> _data;
+  Lang? _scanLang;
+
+  Lang? get scanLang => _scanLang;
+
+  set scanLang(Lang? value) {
+    _data[SCAN_LANG] = value?.toMap();
+    _scanLang = value;
+    _saveUserData(_data);
   }
 
-  var data = await file.readAsString();
-  return jsonDecode(data) as Map<String, dynamic>;
-}
+  Future<void> init() async {
+    var path = await Channel.getExternalStorageDirectory();
+    _file = File("$path/userdata");
 
-Future<void> saveUserData(Map<String, dynamic> data) async {
-  var path = await Channel.getExternalStorageDirectory();
-  var file = File("$path/userdata");
-  if (await file.exists() == false) {
-    file = await file.create(recursive: true);
+    _data = _getuserData();
+    if (_data.containsKey(SCAN_LANG)) {
+      _scanLang = Lang.fromMap(_data[SCAN_LANG]);
+      _scanLang!.hasLocalData = await LangManager.existLocalData(
+        _scanLang!.code,
+      );
+    }
   }
 
-  var content = jsonEncode(data);
-  file.writeAsString(content);
+  Map<String, dynamic> _getuserData() {
+    if (_file.existsSync() == false) {
+      _file.createSync(recursive: true);
+      _file.writeAsStringSync("{}");
+    }
+
+    var data = _file.readAsStringSync();
+    return jsonDecode(data) as Map<String, dynamic>;
+  }
+
+  void _saveUserData(Map<String, dynamic> data) {
+    if (_file.existsSync() == false) {
+      _file.createSync(recursive: true);
+    }
+
+    var content = jsonEncode(data);
+    _file.writeAsStringSync(content);
+  }
 }
+
+enum ImageSource { camera, gallery }
 
 class Channel {
-  static const ANDROID_CHANNEL = MethodChannel('com.oezeb.notepad/ocr_offline');
+  static const ANDROID_CHANNEL = MethodChannel(
+    'com.oezeb.text_scanner/channel',
+  );
 
   // static Future<void> test() async {
   //   await ANDROID_CHANNEL.invokeMethod("test");
   // }
 
-  static Future<String?> pickImage() async {
-    return await ANDROID_CHANNEL.invokeMethod("pickImage");
-  }
-
-  static Future<String?> captureImage() async {
-    return await ANDROID_CHANNEL.invokeMethod("captureImage");
+  static Future<String?> pickImage(ImageSource source) async {
+    switch (source) {
+      case ImageSource.camera:
+        return await ANDROID_CHANNEL.invokeMethod("captureImage");
+      case ImageSource.gallery:
+        return await ANDROID_CHANNEL.invokeMethod("pickImage");
+      default:
+        return null;
+    }
   }
 
   static Future<String> imageToString(String path, String lang) async {
@@ -68,6 +114,10 @@ class Channel {
     return await ANDROID_CHANNEL.invokeMethod('getExternalStorageDirectory');
   }
 
+  static Future<String> getExternalCacheDirectory() async {
+    return await ANDROID_CHANNEL.invokeMethod('getExternalCacheDirectory');
+  }
+
   static openUrl(String url) async {
     return await ANDROID_CHANNEL.invokeMethod('openUrl', {"url": url});
   }
@@ -79,46 +129,74 @@ class Channel {
   }
 }
 
+class DownloadStatus {
+  bool done, error;
+  int? downloaded, total; // downloaded != null means downloading
+  String errorMessage;
+
+  DownloadStatus({
+    this.done = false,
+    this.error = false,
+    this.downloaded,
+    this.total,
+    this.errorMessage = "",
+  });
+}
+
 class Downloader extends ChangeNotifier {
-  int downloaded = 0;
-  int? total;
-  bool done = false;
-  bool error = false;
-  String errorMessage = "";
+  StreamSubscription<List<int>>? _subscription;
+  var _status = DownloadStatus();
+
+  DownloadStatus get status => _status;
 
   Future<void> startDownloading(String url, String filepath) async {
-    downloaded = 0;
-    total = null;
-    done = false;
-    error = false;
-    errorMessage = "";
+    _status = DownloadStatus();
+    _status.downloaded = 0;
+    notifyListeners();
 
     final request = Request('GET', Uri.parse(url));
     final StreamedResponse response = await Client().send(request);
 
-    total = response.contentLength;
+    _status.total = response.contentLength;
+    notifyListeners();
 
     List<int> bytes = [];
 
     final file = await File(filepath).create(recursive: true);
-    response.stream.listen(
+    _subscription = response.stream.listen(
       (List<int> newBytes) {
         bytes.addAll(newBytes);
-        downloaded = bytes.length;
+        _status.downloaded = bytes.length;
         notifyListeners();
       },
-      onDone: () async {
-        await file.writeAsBytes(bytes);
-        done = true;
+      onDone: () {
+        _status.total = null;
+        notifyListeners();
+
+        file.writeAsBytesSync(bytes);
+
+        _status.done = true;
+        _status.downloaded = null;
         notifyListeners();
       },
       onError: (e) {
-        error = true;
-        errorMessage = e.toString();
+        _status.errorMessage = e.toString();
+        _status.downloaded = null;
+        _status.total = null;
+        _status.error = true;
         notifyListeners();
       },
       cancelOnError: true,
     );
+  }
+
+  Future<void> cancelDownload() async {
+    if (_subscription != null) {
+      await _subscription!.cancel();
+      _subscription = null;
+    }
+    _status = DownloadStatus();
+    notifyListeners();
   }
 
   static Future<File> downloadFile(String url, String filepath) async {
@@ -132,69 +210,77 @@ class Downloader extends ChangeNotifier {
 }
 
 class LangManager extends ChangeNotifier {
-  int downloaded = 0;
-  int? total;
-  bool done = false;
-  bool error = false;
-  String errorMessage = "";
+  var _downloader = Downloader();
+  var _cache = "";
+
+  DownloadStatus get status => _downloader.status;
+
+  bool get downloading => status.downloaded != null && status.downloaded! >= 0;
 
   Future<void> downloadDataWithProgress(String code) async {
-    final downloader = Downloader();
-    downloaded = 0;
-    total = null;
-    done = false;
-    error = false;
-    errorMessage = "";
+    _downloader = Downloader();
 
     final filename = "$code.traineddata";
-    final url = "https://github.com/tesseract-ocr/tessdata/raw/4.0.0/$filename";
     final path = await localDataPath;
-    final cache = "$path/cache/$filename";
+    final url = getUrl(filename);
 
-    downloader.addListener(() async {
-      downloaded = downloader.downloaded;
-      total = downloader.total;
-      done = downloader.done;
-      error = downloader.error;
-      errorMessage = downloader.errorMessage;
-      if (downloader.done) {
-        final file = File(cache);
-        await file.copy("$path/$filename");
-        if (await file.exists()) {
-          await file.delete();
+    final cachePath = await Channel.getExternalCacheDirectory();
+    _cache = "$cachePath/$filename";
+
+    _downloader.addListener(() {
+      if (status.done) {
+        scanLanguages[code]?.hasLocalData = true;
+        final file = File(_cache);
+        file.copySync("$path/$filename");
+        if (file.existsSync()) {
+          file.deleteSync();
         }
-      } else if (downloader.error) {
-        final file = File(cache);
-        if (await file.exists()) {
-          await file.delete();
+      } else if (status.error) {
+        final file = File(_cache);
+        if (file.existsSync()) {
+          file.deleteSync();
         }
       }
+
       notifyListeners();
     });
 
     try {
-      await downloader.startDownloading(url, cache);
+      await _downloader.startDownloading(url, _cache);
     } catch (e) {
-      error = true;
-      errorMessage = e.toString();
-      final file = File(cache);
-      if (await file.exists()) {
-        await file.delete();
+      final file = File(_cache);
+      if (file.existsSync()) {
+        file.deleteSync();
       }
       notifyListeners();
     }
   }
 
+  Future<void> cancelDownload() async {
+    _downloader.cancelDownload();
+    final file = File(_cache);
+    if (file.existsSync()) {
+      file.deleteSync();
+    }
+    notifyListeners();
+  }
+
+  static String getUrl(String filename) {
+    return "https://github.com/oezeb/tessdata-v4.0.0/raw/main/$filename";
+    // return "https://github.com/tesseract-ocr/tessdata/raw/4.0.0/$filename";
+  }
+
   static Future<File> downloadData(String code) async {
     final filename = "$code.traineddata";
-    final url = "https://github.com/tesseract-ocr/tessdata/raw/4.0.0/$filename";
+    final url = getUrl(filename);
     final path = await localDataPath;
-    final cache = "$path/cache/$filename";
+    final cachePath = await Channel.getExternalCacheDirectory();
+    final cache = "$cachePath/$filename";
     await Downloader.downloadFile(url, cache);
     final file = File(cache);
     var res = file.copy("$path/$filename");
-    if (await file.exists()) {
-      await file.delete();
+    if (file.existsSync()) {
+      file.deleteSync();
     }
     return res;
   }
@@ -202,9 +288,10 @@ class LangManager extends ChangeNotifier {
   static Future<void> delete(String code) async {
     final path = await localDataPath;
     final file = File("$path/$code.traineddata");
-    if (await file.exists()) {
-      await file.delete();
+    if (file.existsSync()) {
+      file.deleteSync();
     }
+    scanLanguages[code]?.hasLocalData = false;
   }
 
   static Future<List<Lang>> get languages async {
@@ -216,30 +303,39 @@ class LangManager extends ChangeNotifier {
     }
 
     langs.sort((lang1, lang2) {
-      if (lang1.hasLocalData && lang2.hasLocalData) {
-        return 0;
-      } else if (lang1.hasLocalData) {
+      if (lang1.hasLocalData && !lang2.hasLocalData) {
         return -1;
-      } else if (lang2.hasLocalData) {
+      } else if (lang2.hasLocalData && !lang1.hasLocalData) {
         return 1;
       } else {
-        var c = lang1.name.compareTo(lang2.name);
-        if (c == 0) {
-          return lang1.code.compareTo(lang2.code);
+        var lang1Downloading = scanLangDownloaders.containsKey(lang1.code) &&
+            scanLangDownloaders[lang1.code]!.downloading;
+        var lang2Downloading = scanLangDownloaders.containsKey(lang2.code) &&
+            scanLangDownloaders[lang2.code]!.downloading;
+
+        if (lang1Downloading && !lang2Downloading) {
+          return -1;
+        } else if (lang2Downloading && !lang1Downloading) {
+          return 1;
         } else {
-          return c;
+          var c = lang1.name.compareTo(lang2.name);
+          if (c == 0) {
+            return lang1.code.compareTo(lang2.code);
+          } else {
+            return c;
+          }
         }
       }
     });
     return langs;
   }
 
-  static Future<List<Lang>> search(String query) async {
-    final langs = await languages;
-    langs.retainWhere(
+  static List<Lang> search(String query, List<Lang> langList) {
+    langList.retainWhere(
       (e) => e.name.toLowerCase().contains(query.toLowerCase()),
     );
-    return langs;
+
+    return langList;
   }
 
   static Future<String> get localDataPath async {
@@ -250,6 +346,6 @@ class LangManager extends ChangeNotifier {
   static Future<bool> existLocalData(String code) async {
     final path = await localDataPath;
     final file = File("$path/$code.traineddata");
-    return file.exists();
+    return file.existsSync();
   }
 }
