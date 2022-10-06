@@ -16,7 +16,6 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.concurrent.thread
 
-
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.oezeb.text_scanner/channel"
 
@@ -31,6 +30,12 @@ class MainActivity: FlutterActivity() {
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        val versionName = try {
+            val info = context.packageManager.getPackageInfo(context.packageName, 0)
+            info.versionName
+        } catch (e: Exception) {
+            null
+        }
         val tess = Tesseract(getExternalFilesDir(null)?.absolutePath)
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -44,6 +49,7 @@ class MainActivity: FlutterActivity() {
                 "getExternalCacheDirectory" -> getExternalCacheDirectory(call, result)
                 "openUrl" -> openUrl(call, result)
                 "shareText" -> shareText(call, result)
+                "versionName" -> result.success(versionName)
                 else -> result.notImplemented()
             }
         }

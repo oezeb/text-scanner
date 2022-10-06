@@ -1,9 +1,13 @@
 import 'dart:io';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
+import 'package:text_scanner/views/home_view.dart';
 import 'package:text_scanner/views/item_view.dart';
+import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 import 'package:uuid/uuid.dart';
 
 class TextScannerView extends StatefulWidget {
@@ -63,11 +67,15 @@ class _TextScannerViewState extends State<TextScannerView> {
       widget.file.path,
       _lang.code,
     );
-    var path = await Channel.getExternalStorageDirectory();
+    var path = await Channel.getExternalStorageDirectory;
     var file = widget.file.copySync("$path/${_item.id}");
     _item.image = file.path;
     await itemsdb.insert([_item]);
     userData.scanLang = _lang;
+    await FirebaseAnalytics.instance.logEvent(
+      name: "scanned_image",
+      parameters: {"lang": _lang.name},
+    );
     callback(_item);
   }
 
@@ -112,78 +120,91 @@ class _TextScannerViewState extends State<TextScannerView> {
         elevation: 0,
         foregroundColor: Colors.grey[900],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(left: 4.0, right: 4.0),
-        child: Column(children: [
-          const Divider(),
-          Expanded(child: InteractiveViewer(child: Image.file(widget.file))),
-          const Divider(),
-        ]),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    DropdownButton<Lang>(
-                      items: widget.languages
-                          .map((e) => DropdownMenuItem<Lang>(
-                                value: e,
-                                child: SizedBox(
-                                  width: 200,
-                                  child: Text(
-                                    e.name,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ))
-                          .toList(),
-                      value: _lang,
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _lang = value;
-                            // userData["scan_lang"] = value;
-                          });
-                        }
-                      },
-                      isDense: true,
-                    ),
-                  ],
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4.0, right: 4.0),
+              child: Column(children: [
+                const Divider(),
+                Expanded(
+                  child: InteractiveViewer(child: Image.file(widget.file)),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: _savingItem == true
-                    ? null
-                    : () async {
-                        setState(() {
-                          _savingItem = true;
-                        });
-                        _saveItem((item) {
-                          setState(() {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ItemView(item: item),
-                              ),
-                              (route) => route.isFirst,
-                            );
-                          });
-                        });
-                      },
-                child: _savingItem
-                    ? const CircularProgressIndicator()
-                    : const Text("OK"),
-              ),
-            ],
+                const Divider(),
+              ]),
+            ),
           ),
-        ),
+          BottomAppBar(
+            elevation: 0,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        DropdownButton<Lang>(
+                          items: widget.languages
+                              .map((e) => DropdownMenuItem<Lang>(
+                                    value: e,
+                                    child: SizedBox(
+                                      width: 200,
+                                      child: Text(
+                                        e.name,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                          value: _lang,
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _lang = value;
+                              });
+                            }
+                          },
+                          isDense: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _savingItem == true
+                        ? null
+                        : () async {
+                            setState(() {
+                              _savingItem = true;
+                            });
+                            _saveItem((item) async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ItemView(item: item),
+                                ),
+                              );
+                              await interstitialAd.show();
+                              if (!mounted) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const HomeView(),
+                                ),
+                              );
+                            });
+                          },
+                    child: _savingItem
+                        ? const CircularProgressIndicator()
+                        : const Text("OK"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
+      bottomNavigationBar: const AdBannerWidget(),
     );
   }
 }

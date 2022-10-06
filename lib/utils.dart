@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:http/http.dart';
 import 'package:text_scanner/database.dart';
 import 'package:text_scanner/models.dart';
@@ -12,6 +13,15 @@ final itemsdb = ItemsDatabase(path: ItemsDatabase.FILE_NAME);
 final scanLangDownloaders = <String, LangManager>{};
 late Map<String, Lang> scanLanguages;
 late UserData userData;
+late final String? versionName;
+late final InterstitialAd interstitialAd;
+const PLAY_STORE_URL =
+    'https://play.google.com/store/apps/details?id=com.oezeb.text_scanner';
+
+const BANNER_AD_UNIT_ID = 'ca-app-pub-3940256099942544/6300978111'; //test
+// const BANNER_AD_UNIT_ID = 'ca-app-pub-6093428284595418/5496293393';
+const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-3940256099942544/1033173712'; //test
+// const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-6093428284595418/1597674311';
 
 Future<void> init() async {
   scanLanguages = {};
@@ -20,6 +30,23 @@ Future<void> init() async {
   }
   userData = UserData();
   await userData.init();
+  versionName = await Channel.versionName;
+
+  await InterstitialAd.load(
+    adUnitId: INTERSTITIAL_AD_UNIT_ID,
+    request: const AdRequest(),
+    adLoadCallback: InterstitialAdLoadCallback(
+      onAdLoaded: (InterstitialAd ad) {
+        // Keep a reference to the ad so you can show it later.
+        interstitialAd = ad;
+      },
+      onAdFailedToLoad: (LoadAdError error) {
+        if (kDebugMode) {
+          print('InterstitialAd failed to load: $error');
+        }
+      },
+    ),
+  );
 }
 
 String formatDate(DateTime date) {
@@ -32,6 +59,13 @@ String formatDate(DateTime date) {
 
   return "$year-$month-$day $hour:$minute:$second ${date.hour < 12 ? 'AM' : 'PM'}";
 }
+
+BannerAd get bannerAd => BannerAd(
+      adUnitId: BANNER_AD_UNIT_ID,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: const BannerAdListener(),
+    );
 
 class UserData {
   static const String SCAN_LANG = "scan_lang";
@@ -49,7 +83,7 @@ class UserData {
   }
 
   Future<void> init() async {
-    var path = await Channel.getExternalStorageDirectory();
+    var path = await Channel.getExternalStorageDirectory;
     _file = File("$path/userdata");
 
     _data = _getuserData();
@@ -92,6 +126,10 @@ class Channel {
   //   await ANDROID_CHANNEL.invokeMethod("test");
   // }
 
+  static Future<String> get versionName async {
+    return await ANDROID_CHANNEL.invokeMethod("versionName");
+  }
+
   static Future<String?> pickImage(ImageSource source) async {
     switch (source) {
       case ImageSource.camera:
@@ -110,11 +148,11 @@ class Channel {
     });
   }
 
-  static Future<String> getExternalStorageDirectory() async {
+  static Future<String> get getExternalStorageDirectory async {
     return await ANDROID_CHANNEL.invokeMethod('getExternalStorageDirectory');
   }
 
-  static Future<String> getExternalCacheDirectory() async {
+  static Future<String> get getExternalCacheDirectory async {
     return await ANDROID_CHANNEL.invokeMethod('getExternalCacheDirectory');
   }
 
@@ -224,7 +262,7 @@ class LangManager extends ChangeNotifier {
     final path = await localDataPath;
     final url = getUrl(filename);
 
-    final cachePath = await Channel.getExternalCacheDirectory();
+    final cachePath = await Channel.getExternalCacheDirectory;
     _cache = "$cachePath/$filename";
 
     _downloader.addListener(() {
@@ -274,7 +312,7 @@ class LangManager extends ChangeNotifier {
     final filename = "$code.traineddata";
     final url = getUrl(filename);
     final path = await localDataPath;
-    final cachePath = await Channel.getExternalCacheDirectory();
+    final cachePath = await Channel.getExternalCacheDirectory;
     final cache = "$cachePath/$filename";
     await Downloader.downloadFile(url, cache);
     final file = File(cache);
@@ -339,7 +377,7 @@ class LangManager extends ChangeNotifier {
   }
 
   static Future<String> get localDataPath async {
-    final path = await Channel.getExternalStorageDirectory();
+    final path = await Channel.getExternalStorageDirectory;
     return "$path/tesseract/tessdata";
   }
 

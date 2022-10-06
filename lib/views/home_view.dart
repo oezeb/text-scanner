@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/item_view.dart';
 import 'package:text_scanner/views/search_item_view.dart';
 import 'package:text_scanner/views/setting_view.dart';
+import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 import 'package:text_scanner/views/widgets/floating_button_widget.dart';
 import 'package:text_scanner/views/widgets/item_widget.dart';
 import 'package:text_scanner/views/widgets/multi_select_widget.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key, required this.title});
+  const HomeView({super.key, this.title = 'Recents'});
   final String title;
 
   @override
@@ -173,6 +175,7 @@ class _HomeViewState extends State<HomeView> {
         resizeToAvoidBottomInset: false,
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: _multiSelect ? null : const FloatingButton(),
+        bottomNavigationBar: const AdBannerWidget(),
       ),
     );
   }

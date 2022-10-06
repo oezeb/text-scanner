@@ -123,7 +123,7 @@ class _LangWidgetState extends State<LangWidget> {
                     );
                   }
                 } else {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
               },
             ),

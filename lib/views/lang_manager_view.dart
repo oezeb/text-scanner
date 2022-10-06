@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/search_lang_view.dart';
+import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 import 'package:text_scanner/views/widgets/lang_widget.dart';
 
 class LangManagerView extends StatefulWidget {
@@ -49,8 +50,8 @@ class _LangManagerViewState extends State<LangManagerView> {
                   );
                 } else {
                   return Column(
-                    children: [
-                      const LinearProgressIndicator(),
+                    children: const [
+                      LinearProgressIndicator(),
                     ],
                   );
                 }
@@ -59,6 +60,7 @@ class _LangManagerViewState extends State<LangManagerView> {
           ),
         ],
       ),
+      bottomNavigationBar: const AdBannerWidget(),
     );
   }
 }

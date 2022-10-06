@@ -21,8 +21,8 @@ class _FloatingButtonState extends State<FloatingButton> {
       final res = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("Download language data"),
-          content: Text(
+          title: const Text("Download language data"),
+          content: const Text(
             "There is no data available for any language. Would you like to download now?",
           ),
           actions: [
@@ -30,13 +30,13 @@ class _FloatingButtonState extends State<FloatingButton> {
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: Text("No"),
+              child: const Text("No"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context, true);
               },
-              child: Text("Yes"),
+              child: const Text("Yes"),
             ),
           ],
         ),

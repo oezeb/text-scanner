@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
+import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 import 'package:text_scanner/views/widgets/lang_widget.dart';
 
 class SearchLangView extends StatefulWidget {
@@ -83,6 +84,7 @@ class _SearchLangViewState extends State<SearchLangView> {
           ),
         ],
       ),
+      bottomNavigationBar: const AdBannerWidget(),
     );
   }
 }

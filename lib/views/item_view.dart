@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
+import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 
 class ItemView extends StatefulWidget {
   final Item item;
@@ -98,63 +99,72 @@ class _ItemViewState extends State<ItemView> {
       },
       child: DefaultTabController(
         length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            titleSpacing: 0.0,
-            leading: IconButton(
-              onPressed: () async {
-                await _itemVM.save();
-                if (!mounted) return;
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.arrow_back),
-            ),
-            title: Text(
-              _itemVM.title,
-              overflow: TextOverflow.ellipsis,
-            ),
-            actions: [
-              IconButton(
-                onPressed: _onTapEdit,
-                icon: const Icon(Icons.edit),
+        child: WillPopScope(
+          onWillPop: () async {
+            if (mounted) {
+              Navigator.pop(context);
+            }
+            return true;
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              titleSpacing: 0.0,
+              leading: IconButton(
+                onPressed: () async {
+                  await _itemVM.save();
+                  if (!mounted) return;
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back),
               ),
-              IconButton(
-                onPressed: _onTapDelete,
-                icon: const Icon(Icons.delete_forever),
+              title: Text(
+                _itemVM.title,
+                overflow: TextOverflow.ellipsis,
               ),
-            ],
-            bottom: TabBar(
-              tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Text"),
-                      IconButton(
-                        onPressed: _onTapCopy,
-                        icon: const Icon(Icons.content_copy),
-                      )
-                    ],
-                  ),
+              actions: [
+                IconButton(
+                  onPressed: _onTapEdit,
+                  icon: const Icon(Icons.edit),
                 ),
-                const Tab(text: "Image")
+                IconButton(
+                  onPressed: _onTapDelete,
+                  icon: const Icon(Icons.delete_forever),
+                ),
               ],
-              labelColor: Colors.grey[900],
+              bottom: TabBar(
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Text"),
+                        IconButton(
+                          onPressed: _onTapCopy,
+                          icon: const Icon(Icons.content_copy),
+                        )
+                      ],
+                    ),
+                  ),
+                  const Tab(text: "Image")
+                ],
+                labelColor: Colors.grey[900],
+              ),
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              elevation: 0,
+              foregroundColor: Colors.grey[900],
             ),
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            elevation: 0,
-            foregroundColor: Colors.grey[900],
+            body: TabBarView(children: [
+              TextField(
+                controller: _itemVM.textCtrl,
+                maxLines: null,
+                expands: true,
+              ),
+              InteractiveViewer(
+                child: Image.file(File(_itemVM.image)),
+              ),
+            ]),
+            bottomNavigationBar: const AdBannerWidget(),
           ),
-          body: TabBarView(children: [
-            TextField(
-              controller: _itemVM.textCtrl,
-              maxLines: null,
-              expands: true,
-            ),
-            InteractiveViewer(
-              child: Image.file(File(_itemVM.image)),
-            ),
-          ]),
         ),
       ),
     );
