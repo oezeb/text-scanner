@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 
 class PrivacyView extends StatelessWidget {
@@ -25,7 +26,12 @@ class PrivacyView extends StatelessWidget {
               future: rootBundle.loadString("assets/privacy-policy.md"),
               builder: ((context, snapshot) {
                 if (snapshot.hasData) {
-                  return Markdown(data: snapshot.data as String);
+                  return Markdown(
+                    data: snapshot.data as String,
+                    onTapLink: (text, href, title) {
+                      if (href != null) Channel.openUrl(href);
+                    },
+                  );
                 } else {
                   return const LinearProgressIndicator();
                 }
