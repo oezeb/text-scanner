@@ -18,10 +18,8 @@ late final InterstitialAd interstitialAd;
 const PLAY_STORE_URL =
     'https://play.google.com/store/apps/details?id=com.oezeb.text_scanner';
 
-const BANNER_AD_UNIT_ID = 'ca-app-pub-3940256099942544/6300978111'; //test
-// const BANNER_AD_UNIT_ID = 'ca-app-pub-6093428284595418/5496293393';
-const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-3940256099942544/1033173712'; //test
-// const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-6093428284595418/1597674311';
+const BANNER_AD_UNIT_ID = 'ca-app-pub-6093428284595418/5496293393';
+const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-6093428284595418/1597674311';
 
 Future<void> init() async {
   scanLanguages = {};

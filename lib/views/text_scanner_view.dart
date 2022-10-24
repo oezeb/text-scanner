@@ -1,11 +1,10 @@
 import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:text_scanner/models.dart';
 import 'package:text_scanner/utils.dart';
-import 'package:text_scanner/views/home_view.dart';
 import 'package:text_scanner/views/item_view.dart';
 import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
 import 'package:uuid/uuid.dart';
@@ -178,20 +177,20 @@ class _TextScannerViewState extends State<TextScannerView> {
                               _savingItem = true;
                             });
                             _saveItem((item) async {
-                              await Navigator.push(
+                              await Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ItemView(item: item),
                                 ),
+                                (route) => route.isFirst,
                               );
-                              await interstitialAd.show();
-                              if (!mounted) return;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const HomeView(),
-                                ),
-                              );
+                              try {
+                                await interstitialAd.show();
+                              } catch (e) {
+                                if (kDebugMode) {
+                                  print(e);
+                                }
+                              }
                             });
                           },
                     child: _savingItem

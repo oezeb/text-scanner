@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/widgets/ad_banner_widget.dart';

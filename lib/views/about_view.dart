@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:text_scanner/utils.dart';
 import 'package:text_scanner/views/privacy_view.dart';
 import 'package:text_scanner/views/widgets/ad_banner_widget.dart';
@@ -32,7 +31,7 @@ class AboutView extends StatelessWidget {
             ),
             const Divider(),
             ListTile(
-              title: Text("Privacy"),
+              title: const Text("Privacy"),
               onTap: () {
                 Navigator.push(
                   context,
