@@ -1,16 +1,3 @@
-# text_scanner
+# Text Scanner
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Text Scanner is a mobile application that allows users to scan text from images and convert it to editable text. The application uses the [Tesseract OCR](https://github.com/adaptech-cz/Tesseract4Android) engine to perform the text recognition. The application is built using the Flutter framework and Dart programming language.

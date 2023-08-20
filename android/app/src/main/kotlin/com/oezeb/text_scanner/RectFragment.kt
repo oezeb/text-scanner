@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -22,6 +23,11 @@ class RectFragment : Fragment(), OnSetImageUriCompleteListener, OnCropImageCompl
     /** Set the image to show for cropping.  */
     fun setImageUri(imageUri: Uri?) {
         mCropImageView?.setImageBitmap(BitmapFactory.decodeFile(imageUri?.path))
+        mCropImageView?.cropRect = mCropImageView?.wholeImageRect
+    }
+
+    fun saveCropped() {
+        mCropImageView?.getCroppedImageAsync()
     }
 
     override fun onCreateView(
@@ -32,6 +38,7 @@ class RectFragment : Fragment(), OnSetImageUriCompleteListener, OnCropImageCompl
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mCropImageView = CropImageView(view.context)
         mCropImageView = view.findViewById(R.id.cropImageView)
         mCropImageView?.setOnSetImageUriCompleteListener(this)
         mCropImageView?.setOnCropImageCompleteListener(this)
@@ -39,24 +46,12 @@ class RectFragment : Fragment(), OnSetImageUriCompleteListener, OnCropImageCompl
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.main_action_crop -> {
-                mCropImageView?.getCroppedImageAsync()
-                return true
-            }
+        return when (item.itemId) {
             R.id.main_action_rotate -> {
                 mCropImageView!!.rotateImage(90)
-                return true
+                true
             }
-            R.id.main_action_flip_horizontally -> {
-                mCropImageView!!.flipImageHorizontally()
-                return true
-            }
-            R.id.main_action_flip_vertically -> {
-                mCropImageView!!.flipImageVertically()
-                return true
-            }
-            else -> return super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 

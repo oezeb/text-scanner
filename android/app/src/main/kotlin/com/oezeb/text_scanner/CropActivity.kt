@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 
 
@@ -18,12 +19,23 @@ class CropActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_crop)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeButtonEnabled(true)
+        title = "Crop Image"
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.container, RectFragment())
             .commit()
+
+        findViewById<Button>(R.id.save_crop).apply {
+            setOnClickListener() {
+                mFragment?.saveCropped()
+            }
+        }
+
+        findViewById<Button>(R.id.cancel_crop).apply {
+            setOnClickListener() {
+                finish()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

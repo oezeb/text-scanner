@@ -1,5 +1,8 @@
-<com.theartofdev.edmodo.cropper.CropImageView
-    android:id="@+id/cropImageView"
+<com.theartofdev.edmodo.cropper.CropImageView android:id="@+id/cropImageView"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"/>
+    android:layout_height="match_parent"
+    app:cropBorderCornerColor="@android:color/holo_blue_light"
+    app:cropBorderLineColor="@android:color/holo_blue_bright"
+    app:cropGuidelinesColor="@android:color/holo_blue_light"
+    xmlns:app="http://schemas.android.com/apk/res-auto" />

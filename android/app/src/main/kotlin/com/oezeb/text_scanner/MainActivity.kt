@@ -3,14 +3,18 @@ package com.oezeb.text_scanner
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import kotlin.concurrent.thread
 
 fun saveBitmap(bitmap: Bitmap, file: File) {
@@ -29,6 +33,36 @@ fun saveBitmapTemp(bitmap: Bitmap, name_prefix: String = "file_") : File? {
         e.printStackTrace()
         null
     }
+}
+
+class Image(val pixels: IntArray, val width: Int, val height: Int) {
+    constructor(map: Map<String, Any>)
+            : this(map["pixels"] as IntArray, map["width"] as Int, map["height"] as Int)
+
+    val map: Map<String, Any>
+        get() = mapOf<String, Any>("pixels" to pixels, "width" to width, "height" to height)
+
+    override fun toString(): String {
+        return map.toString()
+    }
+}
+
+fun getImagePixels(bytes: ByteArray) : Image {
+    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    val pixels = IntArray(bitmap.width * bitmap.height)
+    bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+    return Image(pixels, bitmap.width, bitmap.height)
+}
+
+fun getImageByteArray(image: Image) : ByteArray {
+    val bitmap = Bitmap.createBitmap(image.pixels, image.width, image.height, Bitmap.Config.ARGB_8888)
+    val stream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+    return stream.toByteArray()
+}
+
+fun getImageByteArray(map: Map<String, Any>) : ByteArray {
+    return getImageByteArray(Image(map))
 }
 
 class MainActivity: FlutterActivity() {
@@ -67,6 +101,22 @@ class MainActivity: FlutterActivity() {
                 "openUrl" -> openUrl(call, result)
                 "shareText" -> shareText(call, result)
                 "versionName" -> result.success(versionName)
+                "getImagePixels" -> {
+                    val bytes = call.argument<ByteArray>("bytes")
+                    if (bytes != null) {
+                        result.success(getImagePixels(bytes).map)
+                    } else {
+                        result.error("ERROR", "Image bytes not provided", null)
+                    }
+                }
+                "getImageByteArray" -> {
+                    val map = call.argument<Map<String, Any>>("data")
+                    if (map != null) {
+                        result.success(getImageByteArray(map))
+                    } else {
+                        result.error("ERROR", "data not provided", null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }

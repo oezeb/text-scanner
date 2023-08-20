@@ -124,6 +124,18 @@ class Channel {
   //   await ANDROID_CHANNEL.invokeMethod("test");
   // }
 
+  static Future<Uint8List> getImageByteArray(Map<String, dynamic> data) async {
+    return await ANDROID_CHANNEL.invokeMethod("getImageByteArray", {
+      "data": data,
+    });
+  }
+
+  static Future<Map<String, dynamic>?> getImagePixels(Uint8List bytes) async {
+    return await ANDROID_CHANNEL.invokeMapMethod("getImagePixels", {
+      "bytes": bytes,
+    });
+  }
+
   static Future<String> get versionName async {
     return await ANDROID_CHANNEL.invokeMethod("versionName");
   }

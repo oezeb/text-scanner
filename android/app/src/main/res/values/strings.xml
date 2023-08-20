@@ -4,4 +4,6 @@
     <string name="main_action_flip">Flip</string>
     <string name="main_action_flip_horizontally">Flip horizontally</string>
     <string name="main_action_flip_vertically">Flip vertically</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>
